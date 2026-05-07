@@ -1,0 +1,12 @@
+package(
+    default_applicable_licenses = ["//:license"],
+    default_testonly = True,
+)
+
+filegroup(
+    name = "testdata",
+    srcs = glob(["testdata/**"]),
+    visibility = [
+        "//visibility:public",
+    ],
+)

@@ -1,0 +1,36 @@
+# proto-file: google3/third_party/cel/spec/proto/cel/expr/conformance/test/suite.proto
+# proto-message: cel.expr.conformance.test.TestSuite
+
+description: "Protobuf input tests"
+
+sections {
+  name: "valid"
+  tests {
+    name: "good spec"
+    input_context {
+      context_message {
+        type_url: "type.googleapis.com/cel.expr.conformance.proto3.TestAllTypes"
+        value: "\b\n"
+      }
+    }
+    output {
+      result_expr: "optional.none()"
+    }
+  }
+}
+
+sections {
+  name: "invalid"
+  tests {
+    name: "bad spec"
+    input_context {
+      context_message {
+        type_url: "type.googleapis.com/cel.expr.conformance.proto3.TestAllTypes"
+        value: "\b\013"
+      }
+    }
+    output {
+      result_value { string_value: "invalid spec, got single_int32=11, wanted <= 10" }
+    }
+  }
+}

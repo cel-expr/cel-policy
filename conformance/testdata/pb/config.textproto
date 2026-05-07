@@ -1,0 +1,18 @@
+# proto-file: google3/google/api/expr/conformance/env_config.proto
+# proto-message: google.api.expr.conformance.Environment
+
+container: "cel.expr.conformance.proto3"
+
+declarations {
+  name: "spec"
+  ident {
+    type {
+      message_type: "cel.expr.conformance.proto3.TestAllTypes"
+    }
+  }
+}
+
+extensions {
+  name: "strings"
+  version: "2"
+}

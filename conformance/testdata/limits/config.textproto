@@ -1,0 +1,16 @@
+# proto-file: google3/google/api/expr/conformance/env_config.proto
+# proto-message: google.api.expr.conformance.Environment
+
+declarations: {
+  name: "now"
+  ident {
+    type {
+      message_type: "google.protobuf.Timestamp"
+    }
+  }
+}
+
+extensions {
+  name: "strings"
+  version: "latest"
+}

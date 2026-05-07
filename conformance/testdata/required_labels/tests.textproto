@@ -1,0 +1,256 @@
+# proto-file: google3/third_party/cel/spec/proto/cel/expr/conformance/test/suite.proto
+# proto-message: cel.expr.conformance.test.TestSuite
+
+description: "Required labels conformance tests"
+
+sections {
+  name: "valid"
+  tests {
+    name: "matching"
+    input {
+      key: "spec"
+      value {
+        value {
+          object_value {
+            [type.googleapis.com/google.protobuf.Struct] {
+              fields {
+                key: "labels"
+                value {
+                  struct_value {
+                    fields {
+                      key: "env"
+                      value { string_value: "prod" }
+                    }
+                    fields {
+                      key: "experiment"
+                      value { string_value: "group b" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    input {
+      key: "resource"
+      value {
+        value {
+          object_value {
+            [type.googleapis.com/google.protobuf.Struct] {
+              fields {
+                key: "labels"
+                value {
+                  struct_value {
+                    fields {
+                      key: "env"
+                      value { string_value: "prod" }
+                    }
+                    fields {
+                      key: "experiment"
+                      value { string_value: "group b" }
+                    }
+                    fields {
+                      key: "release"
+                      value { string_value: "v0.1.0" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    output {
+      result_expr: "optional.none()"
+    }
+  }
+}
+
+sections {
+  name: "missing"
+  tests {
+    name: "env"
+    input {
+      key: "spec"
+      value {
+        value {
+          object_value {
+            [type.googleapis.com/google.protobuf.Struct] {
+              fields {
+                key: "labels"
+                value {
+                  struct_value {
+                    fields {
+                      key: "env"
+                      value { string_value: "prod" }
+                    }
+                    fields {
+                      key: "experiment"
+                      value { string_value: "group b" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    input {
+      key: "resource"
+      value {
+        value {
+          object_value {
+            [type.googleapis.com/google.protobuf.Struct] {
+              fields {
+                key: "labels"
+                value {
+                  struct_value {
+                    fields {
+                      key: "experiment"
+                      value { string_value: "group b" }
+                    }
+                    fields {
+                      key: "release"
+                      value { string_value: "v0.1.0" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    output {
+      result_expr: "\'missing one or more required labels: [\"env\"]\'"
+    }
+  }
+  tests {
+    name: "experiment"
+    input {
+      key: "spec"
+      value {
+        value {
+          object_value {
+            [type.googleapis.com/google.protobuf.Struct] {
+              fields {
+                key: "labels"
+                value {
+                  struct_value {
+                    fields {
+                      key: "env"
+                      value { string_value: "prod" }
+                    }
+                    fields {
+                      key: "experiment"
+                      value { string_value: "group b" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    input {
+      key: "resource"
+      value {
+        value {
+          object_value {
+            [type.googleapis.com/google.protobuf.Struct] {
+              fields {
+                key: "labels"
+                value {
+                  struct_value {
+                    fields {
+                      key: "env"
+                      value { string_value: "staging" }
+                    }
+                    fields {
+                      key: "release"
+                      value { string_value: "v0.1.0" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    output {
+      result_expr: "\'missing one or more required labels: [\"experiment\"]\'"
+    }
+  }
+}
+
+sections {
+  name: "invalid"
+  tests {
+    name: "env"
+    input {
+      key: "spec"
+      value {
+        value {
+          object_value {
+            [type.googleapis.com/google.protobuf.Struct] {
+              fields {
+                key: "labels"
+                value {
+                  struct_value {
+                    fields {
+                      key: "env"
+                      value { string_value: "prod" }
+                    }
+                    fields {
+                      key: "experiment"
+                      value { string_value: "group b" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    input {
+      key: "resource"
+      value {
+        value {
+          object_value {
+            [type.googleapis.com/google.protobuf.Struct] {
+              fields {
+                key: "labels"
+                value {
+                  struct_value {
+                    fields {
+                      key: "env"
+                      value { string_value: "staging" }
+                    }
+                    fields {
+                      key: "experiment"
+                      value { string_value: "group b" }
+                    }
+                    fields {
+                      key: "release"
+                      value { string_value: "v0.1.0" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    output {
+      result_expr: "\'invalid values provided on one or more labels: [\"env\"]\'"
+    }
+  }
+}

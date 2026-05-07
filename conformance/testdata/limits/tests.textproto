@@ -1,0 +1,56 @@
+# proto-file: google3/third_party/cel/spec/proto/cel/expr/conformance/test/suite.proto
+# proto-message: cel.expr.conformance.test.TestSuite
+
+description: "Limits related tests"
+
+sections {
+  name: "now_after_hours"
+  tests {
+    name: "7pm"
+    input {
+      key: "now"
+      value {
+        expr: "timestamp('2024-07-30T00:30:00Z')"
+      }
+    }
+    output {
+      result_expr: "'hello, me'"
+    }
+  }
+  tests {
+    name: "8pm"
+    input {
+      key: "now"
+      value {
+        expr: "timestamp('2024-07-30T20:30:00Z')"
+      }
+    }
+    output {
+      result_expr: "'goodbye, me!'"
+    }
+  }
+  tests {
+    name: "9pm"
+    input {
+      key: "now"
+      value {
+        expr: "timestamp('2024-07-30T21:30:00Z')"
+      }
+    }
+    output {
+      result_expr: "'goodbye, me!!'"
+    }
+  }
+  tests {
+    name: "11pm"
+    input {
+      key: "now"
+      value {
+        expr: "timestamp('2024-07-30T23:30:00Z')"
+      }
+    }
+    output {
+      result_expr: "'goodbye, me!!!'"
+    }
+  }
+}

@@ -1,0 +1,80 @@
+# proto-file: google3/google/api/expr/conformance/env_config.proto
+# proto-message: google.api.expr.conformance.Environment
+
+declarations {
+  name: "destination.ip"
+  ident {
+    type { primitive: STRING }
+  }
+}
+
+declarations {
+  name: "origin.ip"
+  ident: {
+    type { primitive: STRING }
+  }
+}
+
+declarations {
+  name: "spec.restricted_destinations"
+  ident {
+    type {
+
+      list_type {
+        elem_type { primitive: STRING }
+      }
+    }
+  }
+}
+
+declarations {
+  name: "spec.origin"
+  ident {
+    type: { primitive: STRING }
+  }
+}
+
+declarations {
+  name: "request"
+  ident {
+    type {
+      map_type {
+        key_type { primitive: STRING }
+        value_type { well_known: ANY }
+      }
+    }
+  }
+}
+
+declarations {
+  name: "resource"
+  ident {
+    type {
+      map_type {
+        key_type { primitive: STRING }
+        value_type { well_known: ANY }
+      }
+    }
+  }
+}
+
+declarations {
+  name: "locationCode"
+  function {
+    overloads {
+      overload_id: "locationCode_string"
+      params { primitive: STRING }
+      result_type { primitive: STRING }
+    }
+  }
+}
+
+extensions {
+  name: "lists"
+  version: "latest"
+}
+
+extensions {
+  name: "sets"
+  version: "latest"
+}

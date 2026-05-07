@@ -1,0 +1,358 @@
+# proto-file: google3/third_party/cel/spec/proto/cel/expr/conformance/test/suite.proto
+# proto-message: cel.expr.conformance.test.TestSuite
+
+description: "Restricted destinations conformance tests"
+
+sections {
+  name: "valid"
+  tests {
+    name: "ip_allowed"
+    input {
+      key: "spec.origin"
+      value {
+        value { string_value: "us" }
+      }
+    }
+    input {
+      key: "spec.restricted_destinations"
+      value {
+        value {
+          list_value {
+            values { string_value: "cu" }
+            values { string_value: "ir" }
+            values { string_value: "kp" }
+            values { string_value: "sd" }
+            values { string_value: "sy" }
+          }
+        }
+      }
+    }
+    input {
+      key: "destination.ip"
+      value {
+        value { string_value: "10.0.0.1" }
+      }
+    }
+    input {
+      key: "origin.ip"
+      value {
+        value { string_value: "10.0.0.1" }
+      }
+    }
+    input {
+      key: "request"
+      value {
+        value {
+          object_value {
+            [type.googleapis.com/google.protobuf.Struct] {
+              fields {
+                key: "auth"
+                value {
+                  struct_value {
+                    fields {
+                      key: "claims"
+                      value { struct_value {} }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    input {
+      key: "resource"
+      value {
+        value {
+          object_value {
+            [type.googleapis.com/google.protobuf.Struct] {
+              fields {
+                key: "name"
+                value { string_value: "/company/acme/secrets/doomsday-device" }
+              }
+              fields {
+                key: "labels"
+                value {
+                  struct_value: {
+                    fields {
+                      key: "location"
+                      value: { string_value: "us" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    output {
+      result_value { bool_value: false }
+    }
+  }
+  tests {
+    name: "nationality_allowed"
+    input {
+      key: "spec.origin"
+      value {
+        value { string_value: "us" }
+      }
+    }
+    input {
+      key: "spec.restricted_destinations"
+      value {
+        value {
+          list_value {
+            values { string_value: "cu" }
+            values { string_value: "ir" }
+            values { string_value: "kp" }
+            values { string_value: "sd" }
+            values { string_value: "sy" }
+          }
+        }
+      }
+    }
+    input {
+      key: "destination.ip"
+      value {
+        value { string_value: "10.0.0.1" }
+      }
+    }
+    input {
+      key: "request"
+      value {
+        value {
+          object_value {
+            [type.googleapis.com/google.protobuf.Struct] {
+              fields {
+                key: "auth"
+                value {
+                  struct_value {
+                    fields {
+                      key: "claims"
+                      value {
+                        struct_value {
+                          fields {
+                            key: "nationality"
+                            value { string_value: "us" }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    input {
+      key: "resource"
+      value {
+        value {
+          object_value {
+            [type.googleapis.com/google.protobuf.Struct] {
+              fields {
+                key: "name"
+                value { string_value: "/company/acme/secrets/doomsday-device" }
+              }
+              fields {
+                key: "labels"
+                value {
+                  struct_value: {
+                    fields {
+                      key: "location"
+                      value: { string_value: "us" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    output {
+      result_value { bool_value: false }
+    }
+  }
+}
+
+sections {
+  name: "invalid"
+  tests {
+    name: "destination_ip_prohibited"
+    input {
+      key: "spec.origin"
+      value {
+        value { string_value: "us" }
+      }
+    }
+    input {
+      key: "spec.restricted_destinations"
+      value {
+        value {
+          list_value {
+            values { string_value: "cu" }
+            values { string_value: "ir" }
+            values { string_value: "kp" }
+            values { string_value: "sd" }
+            values { string_value: "sy" }
+          }
+        }
+      }
+    }
+    input {
+      key: "destination.ip"
+      value {
+        value { string_value: "123.123.123.123" }
+      }
+    }
+    input {
+      key: "origin.ip"
+      value {
+        value { string_value: "10.0.0.1" }
+      }
+    }
+    input {
+      key: "request"
+      value {
+        value {
+          object_value {
+            [type.googleapis.com/google.protobuf.Struct] {
+              fields {
+                key: "auth"
+                value {
+                  struct_value {
+                    fields {
+                      key: "claims"
+                      value { struct_value {} }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    input {
+      key: "resource"
+      value {
+        value {
+          object_value {
+            [type.googleapis.com/google.protobuf.Struct] {
+              fields {
+                key: "name"
+                value { string_value: "/company/acme/secrets/doomsday-device" }
+              }
+              fields {
+                key: "labels"
+                value {
+                  struct_value: {
+                    fields {
+                      key: "location"
+                      value: { string_value: "us" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    output {
+      result_value { bool_value: true }
+    }
+  }
+  tests {
+    name: "resource_nationality_prohibited"
+    input {
+      key: "spec.origin"
+      value {
+        value { string_value: "us" }
+      }
+    }
+    input {
+      key: "spec.restricted_destinations"
+      value {
+        value {
+          list_value {
+            values { string_value: "cu" }
+            values { string_value: "ir" }
+            values { string_value: "kp" }
+            values { string_value: "sd" }
+            values { string_value: "sy" }
+          }
+        }
+      }
+    }
+    input {
+      key: "destination.ip"
+      value {
+        value { string_value: "10.0.0.1" }
+      }
+    }
+    input {
+      key: "request"
+      value {
+        value {
+          object_value {
+            [type.googleapis.com/google.protobuf.Struct] {
+              fields {
+                key: "auth"
+                value {
+                  struct_value {
+                    fields {
+                      key: "claims"
+                      value {
+                        struct_value {
+                          fields {
+                            key: "nationality"
+                            value { string_value: "us" }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    input {
+      key: "resource"
+      value {
+        value {
+          object_value {
+            [type.googleapis.com/google.protobuf.Struct] {
+              fields {
+                key: "name"
+                value { string_value: "/company/acme/secrets/doomsday-device" }
+              }
+              fields {
+                key: "labels"
+                value {
+                  struct_value: {
+                    fields {
+                      key: "location"
+                      value: { string_value: "cu" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    output {
+      result_value { bool_value: true }
+    }
+  }
+}
