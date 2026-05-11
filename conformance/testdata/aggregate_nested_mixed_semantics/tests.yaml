@@ -1,0 +1,77 @@
+# Copyright 2026 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+description: Deeply nested document classification conformance tests
+section:
+  - name: "basic"
+    tests:
+      - name: "all_true"
+        input:
+          resource:
+            expr: >
+              {
+                'is_privacy_related': true, 'is_eu_origin': true, 'has_pii': true,
+                'has_health_data': true, 'has_standard_pii': true, 'is_b2c': true,
+                'is_us_origin': true, 'is_financial_record': true
+              }
+        output:
+          expr: "['GDPR_SENSITIVE_HEALTH', 'EU_B2C_NOTICE_REQUIRED', 'RETAIN_7_YEARS']"
+
+      - name: "fallback_in_nested_first_match"
+        input:
+          resource:
+            expr: >
+              {
+                'is_privacy_related': true, 'is_eu_origin': true, 'has_pii': true,
+                'has_health_data': false, 'has_standard_pii': true, 'is_b2c': true,
+                'is_us_origin': true, 'is_financial_record': true
+              }
+        output:
+          expr: "['GDPR_STANDARD', 'EU_B2C_NOTICE_REQUIRED', 'RETAIN_7_YEARS']"
+
+      - name: "propagation_all_fail_to_empty"
+        input:
+          resource:
+            expr: >
+              {
+                'is_privacy_related': true, 'is_eu_origin': true, 'has_pii': true,
+                'has_health_data': false, 'has_standard_pii': false, 'is_b2c': false,
+                'is_us_origin': false, 'is_financial_record': false
+              }
+        output:
+          expr: "[]"
+
+      - name: "propagation_nested_fail_with_outer_fallback"
+        input:
+          resource:
+            expr: >
+              {
+                'is_privacy_related': true, 'is_eu_origin': true, 'has_pii': true,
+                'has_health_data': false, 'has_standard_pii': false, 'is_b2c': false,
+                'is_us_origin': false, 'is_financial_record': true
+              }
+        output:
+          expr: "['RETAIN_7_YEARS']"
+
+      - name: "failed_nested_first_match_all_fail"
+        input:
+          resource:
+            expr: >
+              {
+                'is_privacy_related': true, 'is_eu_origin': true, 'has_pii': true,
+                'has_health_data': false, 'has_standard_pii': false, 'is_b2c': true,
+                'is_us_origin': true, 'is_financial_record': true
+              }
+        output:
+          expr: "['EU_B2C_NOTICE_REQUIRED', 'RETAIN_7_YEARS']"
