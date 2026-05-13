@@ -11,3 +11,5 @@ bazel-testlogs
 
 *.swp
 *.lock
+
+MODULE.bazel.lock

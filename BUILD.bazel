@@ -2,14 +2,14 @@ load("@rules_license//rules:license.bzl", "license")
 
 package(
     default_applicable_licenses = [":license"],
-    default_visibility = ["//visibility:public"],
+    default_visibility = ["//:__subpackages__"],
 )
 
 license(
     name = "license",
     package_name = "cel_policy",
     license_kinds = [
-        "@rules_license//licenses/spdx:Apache-2.0"
+        "@rules_license//licenses/spdx:Apache-2.0",
     ],
 )
 
