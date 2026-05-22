@@ -10,3 +10,13 @@ filegroup(
         "//visibility:public",
     ],
 )
+
+exports_files(
+    srcs = glob([
+        "testdata/**/*.yaml",
+        "testdata/**/*.textproto",
+    ]),
+    visibility = [
+        "//visibility:public",
+    ],
+)
