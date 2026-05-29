@@ -7,6 +7,7 @@ filegroup(
     name = "testdata",
     srcs = glob(["testdata/**"]),
     visibility = [
+        "//third_party/cel/devtools/prettier_plugin_cel:__subpackages__",
         "//visibility:public",
     ],
 )
