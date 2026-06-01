@@ -1,0 +1,8 @@
+name: unconditional_rules
+variables:
+  - name: a
+    type_name: bool
+  - name: b
+    type_name: bool
+  - name: c
+    type_name: bool
