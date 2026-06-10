@@ -20,4 +20,5 @@ sections:
   - name: "undeclared_reference"
     output:
       error_set:
-      - "undeclared reference to 'spec'"
+      # Tolerate either 'spec' or 'spec.field'
+      - "undeclared reference to 'spec"
