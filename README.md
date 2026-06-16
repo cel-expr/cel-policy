@@ -2,7 +2,7 @@
 
 The **Common Expression Language (CEL) Policy** framework is a high-performance,
 strongly-typed, and deterministic policy language standard built on top of the
-[Common Expression Language](https://github.com/google/cel-spec).
+[Common Expression Language](https://github.com/cel-expr/cel-spec).
 
 This repository contains the **conformance test suite** for CEL Policies,
 designed to ensure consistent and correct behavior across various language
