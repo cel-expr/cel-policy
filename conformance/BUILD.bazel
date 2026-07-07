@@ -1,3 +1,5 @@
+load("//bazel:test_bundle.bzl", "cel_policy_test_bundle")
+
 package(
     default_applicable_licenses = ["//:license"],
     default_testonly = True,
@@ -18,5 +20,70 @@ exports_files(
     ]),
     visibility = [
         "//visibility:public",
+    ],
+)
+
+_TEST_DIRS = [
+    "context_pb",
+    "k8s",
+    "limits",
+    "nested_rule",
+    "nested_rule2",
+    "nested_rule3",
+    "nested_rule4",
+    "nested_rule5",
+    "nested_rule6",
+    "nested_rule7",
+    "nested_rules_variable_shadowing",
+    "pb",
+    "required_labels",
+    "restricted_destinations",
+    "unconditional_rules",
+    "unnest",
+    "variable_type_propagation",
+]
+
+_TEST_ERROR_DIRS_WITH_ENV = [
+    "compose_conflicting_output",
+    "compose_conflicting_subrule",
+    "unreachable",
+]
+
+_TEST_ERROR_DIRS = [
+    "duplicate_variable",
+    "import",
+    "incompatible_outputs",
+    "syntax",
+    "undeclared_reference",
+]
+
+[cel_policy_test_bundle(
+    name = dir_name,
+    environment = "testdata/%s/config.yaml" % dir_name,
+    policy = "testdata/%s/policy.yaml" % dir_name,
+    test = "testdata/%s/tests.yaml" % dir_name,
+) for dir_name in _TEST_DIRS]
+
+[cel_policy_test_bundle(
+    name = "compile_error_" + dir_name,
+    environment = "testdata/compile_errors/%s/config.yaml" % dir_name,
+    policy = "testdata/compile_errors/%s/policy.yaml" % dir_name,
+    test = "testdata/compile_errors/%s/tests.yaml" % dir_name,
+) for dir_name in _TEST_ERROR_DIRS_WITH_ENV]
+
+[cel_policy_test_bundle(
+    name = "compile_error_" + dir_name,
+    policy = "testdata/compile_errors/%s/policy.yaml" % dir_name,
+    test = "testdata/compile_errors/%s/tests.yaml" % dir_name,
+) for dir_name in _TEST_ERROR_DIRS]
+
+filegroup(
+    name = "test_bundles",
+    srcs = [
+        ":%s" % dir_name
+        for dir_name in _TEST_DIRS
+    ] + [
+        ":compile_error_" + dir_name
+        for dir_name in _TEST_ERROR_DIRS_WITH_ENV + _TEST_ERROR_DIRS
     ],
 )

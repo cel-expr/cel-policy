@@ -17,5 +17,6 @@ module(
     version = "0.1.0",
 )
 
+bazel_dep(name = "rules_python", version = "1.9.1")
 bazel_dep(name = "rules_license", version = "1.0.0")
 bazel_dep(name = "cel-spec", version = "0.25.1", repo_name = "cel_spec")
