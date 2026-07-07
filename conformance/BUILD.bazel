@@ -3,14 +3,14 @@ load("//bazel:test_bundle.bzl", "cel_policy_test_bundle")
 package(
     default_applicable_licenses = ["//:license"],
     default_testonly = True,
+    default_visibility = [
+        "//visibility:public",
+    ],
 )
 
 filegroup(
     name = "testdata",
     srcs = glob(["testdata/**"]),
-    visibility = [
-        "//visibility:public",
-    ],
 )
 
 exports_files(
@@ -18,9 +18,6 @@ exports_files(
         "testdata/**/*.yaml",
         "testdata/**/*.textproto",
     ]),
-    visibility = [
-        "//visibility:public",
-    ],
 )
 
 _TEST_DIRS = [
