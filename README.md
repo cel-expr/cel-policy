@@ -82,6 +82,8 @@ A policy source document supports the following top-level keys:
 - `imports` *(list[object], optional)*: A list of type name aliases to simplify
   object and protobuf references within the expressions.
 - `rule` *(object, required)*: The entry point for the policy execution.
+- `verification` *(object, optional)*: Formal safety properties (`invariants`)
+  verified against the policy.
 
 ---
 
@@ -168,6 +170,43 @@ completeness:
   policy result.
 
 For more details on CEL optionals, refer to the [CEL optional proposal](https://github.com/google/cel-spec/wiki/proposal-246).
+
+---
+
+### Formal Verification (`verification`)
+
+The `verification` block allows policy authors to declare custom safety
+properties that can be statically and mathematically verified using the CEL
+Verifier engine.
+
+Currently, it supports defining custom **invariants**:
+
+- `invariants` *(list[object], optional)*: A list of invariant declarations.
+
+Each invariant item contains:
+
+- `id` *(string, required)*: A unique identifier for the invariant.
+- `description` *(string, optional)*: Human-readable rationale for the
+  invariant.
+- `assume` *(list[string], optional)*: A list of CEL expressions evaluating to
+  `bool` that defines the preconditions constraining the input state space. All
+  conditions must be true. Defaults to `true` if omitted.
+- `assert` *(list[string], required)*: A list of CEL expressions evaluating to
+  `bool` asserting the safety condition. It can reference the reserved
+  identifier `rule.result`, which represents the evaluated return value of the
+  policy's `rule` graph.
+
+```yaml
+verification:
+  invariants:
+    - id: secure_port_required
+      description: "If external access is permitted, port must be 443"
+      assume:
+        - "request.external == true"
+        - "rule.result == 'ALLOW'"
+      assert:
+        - "port == 443"
+```
 
 ---
 
