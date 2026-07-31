@@ -33,13 +33,19 @@ graph TD
     RootRule --> ID[id: string]
     RootRule --> Description[description: string]
     RootRule --> Variables[variables: List of CEL Expressions]
-    RootRule --> Match[match: List of Matches]
+    RootRule --> Match[match: List of First Match Choices]
+    RootRule --> Aggregate[aggregate: List of Aggregate Choices]
 
     Match --> MatchItem[Match Choice]
     MatchItem --> Condition[condition: CEL Bool Expression]
     MatchItem --> Explanation[explanation: CEL String Expression]
     MatchItem --> Output[output: CEL Expression]
     MatchItem --> SubRule[rule: RuleBlock]
+
+    Aggregate --> AggregateItem[Aggregate Choice]
+    AggregateItem --> AggCondition[condition: CEL Bool Expression]
+    AggregateItem --> Emit[emit: CEL Expression]
+    AggregateItem --> AggSubRule[rule: RuleBlock]
 ```
 
 ---
@@ -48,22 +54,22 @@ graph TD
 
 * **Safety and Termination Guarantees**: Like base CEL, policies are
   side-effect-free and non-Turing complete. They are mathematically guaranteed
-  to terminate rapidly, making them ideal for latency-critical, high-throughput
-  systems.
+  to terminate in a predictable amount of time, making them ideal for
+  latency-critical, high-throughput systems.
 * **Lazy Scoped Variables**: Local variables are defined using CEL expressions
   and are evaluated on-demand (lazily) and memoized (cached) to prevent
   redundant computation.
-* **Flexible Evaluation Semantics**: Currently, rules are evaluated in a strict
-  top-down `FIRST_MATCH` sequence (the first condition to evaluate to `true`
-  determines the outcome, eliminating backtracking). The specification is
-  designed to extend to other evaluation modes in the future, such as
-  `LAST_MATCH`, `ALL_MATCH`, and `AGGREGATE` policies.
+* **Flexible Evaluation Semantics**: Rules support multiple evaluation
+  strategies: top-down `FIRST_MATCH` sequence (`match`), where the first
+  condition to evaluate to `true` determines the single outcome, and
+  `AGGREGATE` sequence (`aggregate`), where all choices with matching
+  conditions evaluate and accumulate their emitted values into a list.
 * **Strong Composition and Type Checking**: The policy compiler statically
   validates that all possible output paths evaluate to the **exact same type**,
   avoiding dynamic runtime type mismatches.
-* **Structured Defaults and Optionals**: If no match conditions are met,
-  policies cleanly return `optional.none()`, allowing callers to seamlessly
-  handle unmatched states.
+* **Structured Defaults and Optionals**: If no conditions are met in a `match`
+  policy, it cleanly returns `optional.none()`, while an unmatched `aggregate`
+  policy returns an empty list `[]`.
 
 ---
 
@@ -77,8 +83,10 @@ combined and ordered according to the policy evaluation semantic.
 
 A policy source document supports the following top-level keys:
 
-- `name` *(string, required)*: A system-specific unique identifier for the policy.
-- `description` *(string, optional)*: A human-readable description of what the policy does.
+- `name` *(string, required)*: A system-specific unique identifier for the
+  policy.
+- `description` *(string, optional)*: A human-readable description of what the
+  policy does.
 - `imports` *(list[object], optional)*: A list of type name aliases to simplify
   object and protobuf references within the expressions.
 - `rule` *(object, required)*: The entry point for the policy execution.
@@ -98,7 +106,11 @@ A `rule` block supports the following fields:
 - `id` *(string, optional)*: A unique identifier for the rule.
 - `description` *(string, optional)*: A user-friendly description of the rule.
 - `variables` *(list, optional)*: Ordered local variable declarations.
-- `match` *(list, required)*: The sequential choices to evaluate.
+- **Evaluation Semantics**: A rule must specify exactly one evaluation mode:
+  - `match` *(list)*: Sequential choices evaluated using `FIRST_MATCH` semantics
+    (evaluates top-down until a condition is met).
+  - `aggregate` *(list)*: Choices evaluated using `AGGREGATE` semantics
+    (evaluates all matching choices and collects emitted values into a list).
 
 ---
 
@@ -132,8 +144,8 @@ within a CEL expression.
 ### Match Choices (`match`)
 
 A `match` block contains a sequence of conditional logic and outcomes evaluated
-in a top-down, first-match sequence. A match block must contain at least one
-output path.
+in a top-down, first-match sequence (`FIRST_MATCH`). A match block must contain
+at least one output path.
 
 Each match item contains:
 
@@ -148,15 +160,37 @@ Each match item contains:
 
 ---
 
+### Aggregate Choices (`aggregate`)
+
+An `aggregate` block evaluates all matching choices and collects their outcomes
+into a list, unlike `match` which stops at the first true condition.
+
+Each aggregate choice item contains:
+
+- `condition` *(string, optional)*: A CEL expression evaluating to `bool`. If
+  omitted, it defaults to `true`. Conditions must not evaluate to a static
+  constant `false`.
+- **Outcome**: Each aggregate choice item must define exactly one of:
+  * `emit` *(string)*: A CEL expression defining a value to append to the
+    accumulated result list if matched.
+  * `rule` *(object)*: A nested `rule` block (such as a nested `match` block)
+    to evaluate further if matched.
+
+> [!NOTE]
+> `aggregate` rules cannot be nested directly or indirectly inside another
+> `aggregate` rule. However, `aggregate` rules can be nested within `match`
+> rules, and `match` rules can be nested within `aggregate` choices.
+
+---
+
 ### Conditions and Return Types
 
 A `condition` expression must type-check to a `bool` return type. When a
-`condition` predicate evaluates to `true`, either the corresponding `output`
-expression is evaluated and returned, or the nested `rule` block is evaluated.
+`condition` predicate evaluates to `true`, the corresponding outcome
+(`output`, `emit`, or nested `rule`) is evaluated.
 
-#### Optional Return Types
-The overall return type of a policy is dynamically determined by its evaluation
-completeness:
+#### Return Types for `match` Rules (Optional & Plain Types)
+For `match` rules, the return type is determined by evaluation completeness:
 
 - **Exhaustive/Unconditional Return**: If the policy guarantees that a match
   path is always met (e.g., the final match has no `condition` or is
@@ -169,7 +203,32 @@ completeness:
   result in a matched output, `optional.none()` is returned as the overall
   policy result.
 
-For more details on CEL optionals, refer to the [CEL optional proposal](https://github.com/google/cel-spec/wiki/proposal-246).
+For more details on CEL optionals, refer to the
+[CEL optional proposal](https://github.com/google/cel-spec/wiki/proposal-246).
+
+#### Return Types for `aggregate` Rules (List Types)
+For `aggregate` rules, matching outcomes are collected into a list:
+
+- **Aggregated Return**: If the emitted items in an `aggregate` rule evaluate to
+  type `T`, the overall return type of the rule is `list(T)`
+  (e.g., `list(string)`).
+- **Empty Result**: If no conditions within an `aggregate` block evaluate to
+  `true`, the policy returns an empty list `[]`.
+- **Nested Optional Pruning**: If a nested sub-rule (such as a nested `match`
+  block) under an `aggregate` choice yields `optional.none()` (because no
+  match branch was met), that `optional.none()` is pruned (omitted) from the
+  aggregated list.
+- **Nested List Values**: If an `emit` or nested `output` explicitly yields a
+  list value `list(T)` (e.g., `emit: "['tag1', 'tag2']"`), each emitted list is
+  appended as an element of the result list, yielding `list(list(T))`
+  (e.g., `[['tag1', 'tag2']]`).
+
+For conformance test examples, see:
+
+<!-- disableFinding(LINE_OVER_80) -->
+- `aggregate` ([policy](conformance/testdata/aggregate/policy.yaml), [tests](conformance/testdata/aggregate/tests.yaml))
+- `aggregate_explicit_list_output` ([policy](conformance/testdata/aggregate_explicit_list_output/policy.yaml), [tests](conformance/testdata/aggregate_explicit_list_output/tests.yaml))
+- `aggregate_nested_explicit_list_double_wrapping` ([policy](conformance/testdata/aggregate_nested_explicit_list_double_wrapping/policy.yaml), [tests](conformance/testdata/aggregate_nested_explicit_list_double_wrapping/tests.yaml))
 
 ---
 
@@ -288,40 +347,54 @@ repository houses a comprehensive conformance test suite.
 ### Test Anatomy
 Each test category includes three key components:
 
+<!-- disableFinding(LINE_OVER_80) -->
 | File Name | Format | Purpose |
 | :--- | :--- | :--- |
-| `config.yaml` / `config.textproto` | YAML or Protobuf | Configures the CEL environment, declares input variables (`variables`), specifies types, and registers stdlib extensions (like `strings`). See [context_pb/config.textproto](conformance/testdata/context_pb/config.textproto). |
-| `policy.yaml` | YAML | The actual CEL policy file being tested. See [nested_rule/policy.yaml](conformance/testdata/nested_rule/policy.yaml). |
-| `tests.yaml` / `tests.textproto` | YAML or Protobuf | Test cases containing input values (`input`) and the expected evaluation outcomes (`output`), or expected compilation error sets. See [nested_rule/tests.yaml](conformance/testdata/nested_rule/tests.yaml). |
+| `config.yaml` / `config.textproto` | YAML or Protobuf | Configures the CEL environment, declares input variables (`variables`), specifies types, and registers stdlib extensions (like `strings`). See [context_pb](conformance/testdata/context_pb/config.textproto). |
+| `policy.yaml` | YAML | The actual CEL policy file being tested. See [nested_rule](conformance/testdata/nested_rule/policy.yaml) and [aggregate](conformance/testdata/aggregate/policy.yaml). |
+| `tests.yaml` / `tests.textproto` | YAML or Protobuf | Test cases containing input values (`input`) and the expected evaluation outcomes (`output`), or expected compilation error sets. See [nested_rule](conformance/testdata/nested_rule/tests.yaml). |
 
 ---
 
 ## Static Analysis & Compilation Guarantees
 
 Conforming CEL Policy compilers must implement strict compile-time static
-analysis. To verify this, the test suite in [compile_errors/](conformance/testdata/compile_errors) defines negative test cases that must fail compilation with appropriate error sets.
+analysis. To verify this, the test suite in
+[compile_errors/](conformance/testdata/compile_errors) defines negative test
+cases that must fail compilation with appropriate error sets.
 
 The suite covers the following compile-time checks:
 
-1. **Type Agreement (Incompatible Outputs)**: The compiler must statically
-   verify that all possible match branches in a policy evaluate to the **exact
-   same type**. Mixing outcome types (e.g., one branch returning `bool` and
-   another returning `map`) is a compile-time error. See
-   [compile_errors/compose_conflicting_output/policy.yaml](conformance/testdata/compose_conflicting_output/policy.yaml).
-2. **Unreachable Code (Dead Condition Detection)**: The compiler must detect and
-   reject policies with dead-code branches. For example, if an unconditional
-   match choice (one without a `condition` or where `condition: "true"`)
-   precedes other choices in a block, subsequent choices are unreachable and
-   will trigger a compilation failure. See
-   [compile_errors/unreachable/policy.yaml](conformance/testdata/compile_errors/unreachable/policy.yaml).
+1. **Type Agreement (Incompatible Outputs & Emits)**: The compiler must
+   statically verify that all possible outcome branches in a policy evaluate
+   to the **exact same type**. Mixing outcome types in `match` outputs or
+   `aggregate` emits (e.g., one branch emitting `string` and another emitting
+   `int`) is a compile-time error. See
+   [compose_conflicting_output](conformance/testdata/compile_errors/compose_conflicting_output/policy.yaml)
+   and
+   [aggregate_heterogeneous_outputs](conformance/testdata/compile_errors/aggregate_heterogeneous_outputs/policy.yaml).
+2. **Unreachable Code and Invalid Conditions**: The compiler must detect and
+   reject policies with unreachable branches or conditions that are statically
+   `false`.
+   - In `match` rules, if an unconditional choice (where `condition` is omitted
+     or `condition: "true"`) precedes other choices in a block, subsequent
+     choices are unreachable. See
+     [unreachable](conformance/testdata/compile_errors/unreachable/policy.yaml).
+   - In `aggregate` rules, conditions that evaluate to a static constant
+     `false` (e.g., `condition: "false"`) are rejected at compile time. See
+     [aggregate_false_condition](conformance/testdata/compile_errors/aggregate_false_condition/policy.yaml).
 3. **Scope and Reference Validation**: The compiler must validate that all
    referenced variables, inputs, and imported Protobuf types are properly
    declared in the scope. It also ensures variable names are unique (no
    duplicates) and prevents forward or self-referential variable dependencies.
    See
-   [compile_errors/undeclared_reference/policy.yaml](conformance/testdata/compile_errors/undeclared_reference/policy.yaml)
+   [undeclared_reference](conformance/testdata/compile_errors/undeclared_reference/policy.yaml)
    and
-   [compile_errors/duplicate_variable/policy.yaml](conformance/testdata/compile_errors/duplicate_variable/policy.yaml).
+   [duplicate_variable](conformance/testdata/compile_errors/duplicate_variable/policy.yaml).
+4. **Semantics Nesting Restrictions**: `aggregate` rules cannot be nested
+   inside another `aggregate` rule or its sub-rules
+   (`nested aggregate rules are not allowed`). See
+   [aggregate_nested_mixed_semantics](conformance/testdata/compile_errors/aggregate_nested_mixed_semantics/policy.yaml).
 
 ---
 
