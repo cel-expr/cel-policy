@@ -16,8 +16,8 @@ name: aggregate_heterogeneous_outputs
 rule:
   aggregate:
     - condition: "true"
-      emit: "'PII'"
+      output: "'PII'"
     - condition: "true"
-      emit: "403"
+      output: "403"
     - condition: "true"
-      emit: "{'reason': 'blocked'}"
+      output: "{'reason': 'blocked'}"

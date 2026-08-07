@@ -19,6 +19,6 @@ rule:
       rule:
         aggregate:
           - condition: "1 == 2"
-            emit: "'ADMIN'"
+            output: "'ADMIN'"
     - condition: "true"
       output: "['FALLBACK']"

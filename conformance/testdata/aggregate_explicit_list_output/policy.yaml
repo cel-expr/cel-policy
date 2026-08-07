@@ -16,4 +16,4 @@ name: aggregate_explicit_list_output
 rule:
   aggregate:
     - condition: "true"
-      emit: "['tag1', 'tag2']"
+      output: "['tag1', 'tag2']"
