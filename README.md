@@ -44,7 +44,7 @@ graph TD
 
     Aggregate --> AggregateItem[Aggregate Choice]
     AggregateItem --> AggCondition[condition: CEL Bool Expression]
-    AggregateItem --> Emit[emit: CEL Expression]
+    AggregateItem --> AggOutput[output: CEL Expression]
     AggregateItem --> AggSubRule[rule: RuleBlock]
 ```
 
@@ -63,7 +63,7 @@ graph TD
   strategies: top-down `FIRST_MATCH` sequence (`match`), where the first
   condition to evaluate to `true` determines the single outcome, and
   `AGGREGATE` sequence (`aggregate`), where all choices with matching
-  conditions evaluate and accumulate their emitted values into a list.
+  conditions evaluate and accumulate their output values into a list.
 * **Strong Composition and Type Checking**: The policy compiler statically
   validates that all possible output paths evaluate to the **exact same type**,
   avoiding dynamic runtime type mismatches.
@@ -110,7 +110,7 @@ A `rule` block supports the following fields:
   - `match` *(list)*: Sequential choices evaluated using `FIRST_MATCH` semantics
     (evaluates top-down until a condition is met).
   - `aggregate` *(list)*: Choices evaluated using `AGGREGATE` semantics
-    (evaluates all matching choices and collects emitted values into a list).
+    (evaluates all matching choices and collects output values into a list).
 
 ---
 
@@ -171,7 +171,7 @@ Each aggregate choice item contains:
   omitted, it defaults to `true`. Conditions must not evaluate to a static
   constant `false`.
 - **Outcome**: Each aggregate choice item must define exactly one of:
-  * `emit` *(string)*: A CEL expression defining a value to append to the
+  * `output` *(string)*: A CEL expression defining a value to append to the
     accumulated result list if matched.
   * `rule` *(object)*: A nested `rule` block (such as a nested `match` block)
     to evaluate further if matched.
@@ -187,7 +187,7 @@ Each aggregate choice item contains:
 
 A `condition` expression must type-check to a `bool` return type. When a
 `condition` predicate evaluates to `true`, the corresponding outcome
-(`output`, `emit`, or nested `rule`) is evaluated.
+(`output` or nested `rule`) is evaluated.
 
 #### Return Types for `match` Rules (Optional & Plain Types)
 For `match` rules, the return type is determined by evaluation completeness:
@@ -209,7 +209,7 @@ For more details on CEL optionals, refer to the
 #### Return Types for `aggregate` Rules (List Types)
 For `aggregate` rules, matching outcomes are collected into a list:
 
-- **Aggregated Return**: If the emitted items in an `aggregate` rule evaluate to
+- **Aggregated Return**: If the output items in an `aggregate` rule evaluate to
   type `T`, the overall return type of the rule is `list(T)`
   (e.g., `list(string)`).
 - **Empty Result**: If no conditions within an `aggregate` block evaluate to
@@ -218,9 +218,9 @@ For `aggregate` rules, matching outcomes are collected into a list:
   block) under an `aggregate` choice yields `optional.none()` (because no
   match branch was met), that `optional.none()` is pruned (omitted) from the
   aggregated list.
-- **Nested List Values**: If an `emit` or nested `output` explicitly yields a
-  list value `list(T)` (e.g., `emit: "['tag1', 'tag2']"`), each emitted list is
-  appended as an element of the result list, yielding `list(list(T))`
+- **Nested List Values**: If an `output` explicitly yields a list value
+  `list(T)` (e.g., `output: "['tag1', 'tag2']"`), each output list is appended
+  as an element of the result list, yielding `list(list(T))`
   (e.g., `[['tag1', 'tag2']]`).
 
 For conformance test examples, see:
@@ -365,11 +365,11 @@ cases that must fail compilation with appropriate error sets.
 
 The suite covers the following compile-time checks:
 
-1. **Type Agreement (Incompatible Outputs & Emits)**: The compiler must
+1. **Type Agreement (Incompatible Outputs)**: The compiler must
    statically verify that all possible outcome branches in a policy evaluate
-   to the **exact same type**. Mixing outcome types in `match` outputs or
-   `aggregate` emits (e.g., one branch emitting `string` and another emitting
-   `int`) is a compile-time error. See
+   to the **exact same type**. Mixing outcome types in match or aggregate
+   outputs (e.g., one branch outputting `string` and another outputting `int`)
+   is a compile-time error. See
    [compose_conflicting_output](conformance/testdata/compile_errors/compose_conflicting_output/policy.yaml)
    and
    [aggregate_heterogeneous_outputs](conformance/testdata/compile_errors/aggregate_heterogeneous_outputs/policy.yaml).

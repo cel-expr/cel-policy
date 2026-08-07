@@ -16,4 +16,4 @@ name: aggregate_explicit_optional_none
 rule:
   aggregate:
     - condition: "true"
-      emit: "optional.none()"
+      output: "optional.none()"

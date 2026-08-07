@@ -19,8 +19,8 @@ rule:
       rule:
         aggregate:
           - condition: "cond2"
-            emit: "'A'"
+            output: "'A'"
           - condition: "cond3"
-            emit: "'B'"
+            output: "'B'"
     - condition: "true"
       output: "['FALLBACK']"
