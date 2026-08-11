@@ -16,4 +16,4 @@ name: aggregate_false_condition
 rule:
   aggregate:
     - condition: "false"
-      emit: "'FALSE'"
+      output: "'FALSE'"

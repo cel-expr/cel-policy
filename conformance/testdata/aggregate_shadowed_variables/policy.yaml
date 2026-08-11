@@ -19,7 +19,7 @@ rule:
       expression: "10"
   aggregate:
     - condition: "resource.cond1 == true"
-      emit: "variables.x"
+      output: "variables.x"
     - condition: "resource.cond2 == true"
       rule:
         variables:

@@ -16,9 +16,9 @@ name: aggregate
 rule:
   aggregate:
     - condition: "resource.is_pii == true"
-      emit: "'PII'"
+      output: "'PII'"
     - condition: "resource.is_confidential == true"
-      emit: "'CONFIDENTIAL'"
+      output: "'CONFIDENTIAL'"
     - condition: "true"
       rule:
         match:
