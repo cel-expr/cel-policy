@@ -21,7 +21,13 @@ exports_files(
 )
 
 _TEST_DIRS = [
+    "aggregate",
+    "aggregate_explicit_list_output",
+    "aggregate_explicit_optional_none",
+    "aggregate_nested_explicit_list_double_wrapping",
+    "aggregate_shadowed_variables",
     "context_pb",
+    "first_match_nested_aggregate",
     "k8s",
     "limits",
     "nested_rule",
@@ -40,33 +46,28 @@ _TEST_DIRS = [
     "variable_type_propagation",
 ]
 
-_TEST_ERROR_DIRS_WITH_ENV = [
+_TEST_ERROR_DIRS = [
+    "aggregate_false_condition",
+    "aggregate_heterogeneous_outputs",
+    "aggregate_nested_mixed_semantics",
+    "aggregate_subrule_heterogeneous_outputs",
+    "aggregate_unreachable_in_nested_first_match",
     "compose_conflicting_output",
     "compose_conflicting_subrule",
-    "unreachable",
-]
-
-_TEST_ERROR_DIRS = [
     "duplicate_variable",
     "import",
     "incompatible_outputs",
     "syntax",
     "undeclared_reference",
+    "unreachable",
+    "unreachable_under_unconditional_aggregate_subrule",
 ]
 
 [cel_policy_test_bundle(
     name = dir_name,
-    environment = "testdata/%s/config.yaml" % dir_name,
     policy = "testdata/%s/policy.yaml" % dir_name,
     test = "testdata/%s/tests.yaml" % dir_name,
 ) for dir_name in _TEST_DIRS]
-
-[cel_policy_test_bundle(
-    name = "compile_error_" + dir_name,
-    environment = "testdata/compile_errors/%s/config.yaml" % dir_name,
-    policy = "testdata/compile_errors/%s/policy.yaml" % dir_name,
-    test = "testdata/compile_errors/%s/tests.yaml" % dir_name,
-) for dir_name in _TEST_ERROR_DIRS_WITH_ENV]
 
 [cel_policy_test_bundle(
     name = "compile_error_" + dir_name,
@@ -81,6 +82,6 @@ filegroup(
         for dir_name in _TEST_DIRS
     ] + [
         ":compile_error_" + dir_name
-        for dir_name in _TEST_ERROR_DIRS_WITH_ENV + _TEST_ERROR_DIRS
+        for dir_name in _TEST_ERROR_DIRS
     ],
 )

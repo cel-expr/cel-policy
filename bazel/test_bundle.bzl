@@ -15,18 +15,10 @@
 """Defines a bazel rule for bundling CEL policy conformance tests."""
 
 def _cel_policy_test_bundle_impl(ctx):
-    inputs = []
+    inputs = [ctx.file.policy, ctx.file.test] + ctx.files._testdata
     args = ctx.actions.args()
-    if ctx.file.environment:
-        inputs.append(ctx.file.environment)
-        args.add("--environment", ctx.file.environment.path)
-    if ctx.file.policy:
-        inputs.append(ctx.file.policy)
-        args.add("--policy", ctx.file.policy.path)
-    if ctx.file.test:
-        inputs.append(ctx.file.test)
-        args.add("--test", ctx.file.test.path)
-
+    args.add("--policy", ctx.file.policy.path)
+    args.add("--test", ctx.file.test.path)
     args.add("--output", ctx.outputs.out.path)
 
     ctx.actions.run(
@@ -45,14 +37,20 @@ cel_policy_test_bundle = rule(
     Output file is a YAML file with three documents: environment, policy, and
     test.
 
-    If there is no environment file, the environment document will be omitted.
+    If there is no config.yaml in the policy directory, the environment
+    document will be omitted.
     """,
     implementation = _cel_policy_test_bundle_impl,
     outputs = {"out": "%{name}_bundle.yaml"},
     attrs = {
-        "environment": attr.label(allow_single_file = [".yaml"]),
         "policy": attr.label(allow_single_file = [".yaml"], mandatory = True),
         "test": attr.label(allow_single_file = [".yaml"], mandatory = True),
+        # We include the entire testdata tree as an input so the bundler can lookup optional files
+        # like config.yaml. May revisit if the bundle format becomes the default instead of just for
+        # C++.
+        "_testdata": attr.label(
+            default = "//conformance:testdata",
+        ),
         "_bundle_tool": attr.label(
             default = "//bazel:bundle",
             executable = True,
