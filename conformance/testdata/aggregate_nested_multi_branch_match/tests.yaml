@@ -1,0 +1,50 @@
+# Copyright 2026 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+description: Conformance test for multi-branch nested match rule with optional fallback under aggregate
+section:
+  - name: "basic"
+    tests:
+      - name: "first_branch_match"
+        input:
+          cond:
+            value: true
+          x:
+            value: 15
+        output:
+          value: ["HIGH", "DEFAULT"]
+      - name: "second_branch_match"
+        input:
+          cond:
+            value: true
+          x:
+            value: 5
+        output:
+          value: ["LOW", "DEFAULT"]
+      - name: "nested_fallback_to_empty"
+        input:
+          cond:
+            value: true
+          x:
+            value: -1
+        output:
+          value: ["DEFAULT"]
+      - name: "outer_condition_false"
+        input:
+          cond:
+            value: false
+          x:
+            value: 15
+        output:
+          value: ["DEFAULT"]
