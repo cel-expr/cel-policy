@@ -21,6 +21,7 @@ exports_files(
 )
 
 _TEST_DIRS = [
+    "agent_tool_execution_governance",
     "aggregate",
     "aggregate_explicit_list_output",
     "aggregate_explicit_optional_none",
